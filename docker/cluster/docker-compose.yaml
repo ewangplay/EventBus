@@ -1,0 +1,91 @@
+version: '2.0'
+
+services:
+
+  eventbus-seeker0:
+    container_name: eventbus-seeker0
+    image: ${EVENTBUS_SEEKER_IMAGE}:${EVENTBUS_TAG}
+    working_dir: /opt/ewangplay/eventbus
+    command: /opt/ewangplay/eventbus/bin/ebseeker --config=/opt/ewangplay/eventbus/etc/ebseeker.cfg
+    ports:
+      - 4160:4160
+      - 4161:4161
+    volumes:
+      - /opt/ewangplay/eventbus/seeker0/log:/opt/ewangplay/eventbus/log
+      - /opt/ewangplay/eventbus/seeker0/etc:/opt/ewangplay/eventbus/etc
+
+  redis0:
+    container_name: redis0
+    image: ${REDIS_IMAGE}:${REDIS_TAG}
+    working_dir: /opt/ewangplay/redis
+    command: redis-server /opt/ewangplay/redis/etc/redis.conf
+    ports:
+      - 7001:6379
+    volumes:
+      - /opt/ewangplay/redis0/log:/opt/ewangplay/redis/log
+      - /opt/ewangplay/redis0/data:/opt/ewangplay/redis/data
+      - /opt/ewangplay/redis0/etc:/opt/ewangplay/redis/etc
+
+  eventbus-node0:
+    container_name: eventbus-node0
+    image: ${EVENTBUS_NODE_IMAGE}:${EVENTBUS_TAG}
+    working_dir: /opt/ewangplay/eventbus
+    command: /opt/ewangplay/eventbus/bin/ebnode --config=/opt/ewangplay/eventbus/etc/ebnode.yaml
+    ports:
+      - 4150:4150
+      - 4151:4151
+      - 8091:8091
+    volumes:
+      - /opt/ewangplay/eventbus/node0/log:/opt/ewangplay/eventbus/log
+      - /opt/ewangplay/eventbus/node0/data:/opt/ewangplay/eventbus/data
+      - /opt/ewangplay/eventbus/node0/etc:/opt/ewangplay/eventbus/etc
+    depends_on:
+      - eventbus-seeker0
+      - redis0
+
+  eventbus-node1:
+    container_name: eventbus-node1
+    image: ${EVENTBUS_NODE_IMAGE}:${EVENTBUS_TAG}
+    working_dir: /opt/ewangplay/eventbus
+    command: /opt/ewangplay/eventbus/bin/ebnode --config=/opt/ewangplay/eventbus/etc/ebnode.yaml
+    ports:
+      - 5150:5150
+      - 5151:5151
+      - 9091:9091
+    volumes:
+      - /opt/ewangplay/eventbus/node1/log:/opt/ewangplay/eventbus/log
+      - /opt/ewangplay/eventbus/node1/data:/opt/ewangplay/eventbus/data
+      - /opt/ewangplay/eventbus/node1/etc:/opt/ewangplay/eventbus/etc
+    depends_on:
+      - eventbus-seeker0
+      - redis0
+
+  eventbus-node2:
+    container_name: eventbus-node2
+    image: ${EVENTBUS_NODE_IMAGE}:${EVENTBUS_TAG}
+    working_dir: /opt/ewangplay/eventbus
+    command: /opt/ewangplay/eventbus/bin/ebnode --config=/opt/ewangplay/eventbus/etc/ebnode.yaml
+    ports:
+      - 6150:6150
+      - 6151:6151
+      - 10091:10091
+    volumes:
+      - /opt/ewangplay/eventbus/node2/log:/opt/ewangplay/eventbus/log
+      - /opt/ewangplay/eventbus/node2/data:/opt/ewangplay/eventbus/data
+      - /opt/ewangplay/eventbus/node2/etc:/opt/ewangplay/eventbus/etc
+    depends_on:
+      - eventbus-seeker0
+      - redis0
+
+  eventbus-admin:
+    container_name: eventbus-admin
+    image: ${EVENTBUS_ADMIN_IMAGE}:${EVENTBUS_TAG}
+    working_dir: /opt/ewangplay/eventbus
+    command: /opt/ewangplay/eventbus/bin/ebadmin --config=/opt/ewangplay/eventbus/etc/ebadmin.cfg
+    ports:
+      - 4171:4171
+    volumes:
+      - /opt/ewangplay/eventbus/admin/log:/opt/ewangplay/eventbus/log
+      - /opt/ewangplay/eventbus/admin/etc:/opt/ewangplay/eventbus/etc
+    depends_on:
+      - eventbus-node0
