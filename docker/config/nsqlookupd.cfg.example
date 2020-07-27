@@ -1,21 +1,6 @@
 ## log verbosity level: debug, info, warn, error, or fatal
 log-level = "info"
 
-## log output prefix
-log-prefix = "[eventbus-seeker]"
-
-## path to log file
-log-path = "/opt/ewangplay/eventbus/log"
-
-## max size per log file before rolling (megabytes)
-log-max-size = 100
-
-## rotate log file daily
-log-retate-daily = false
-
-## max age per log file (days)
-log-max-age = 30
-
 ## <addr>:<port> to listen on for TCP clients
 tcp_address = "0.0.0.0:4160"
 
@@ -24,6 +9,7 @@ http_address = "0.0.0.0:4161"
 
 ## address that will be registered with lookupd (defaults to the OS hostname)
 # broadcast_address = ""
+
 
 ## duration of time a producer will remain in the active list since its last ping
 inactive_producer_timeout = "300s"

@@ -1,0 +1,107 @@
+eventbus:
+    ## <IP>:<port> to listen on for HTTP request
+    http_address: "0.0.0.0:8091"
+
+    ## http request url regexp pattern
+    url_pattern: /(v\d+)/(\w+)/?(\w+)?/?(\w+)?
+    
+    ## retry policy for failed event: 1 - count policy; 2 - timeout policy
+    retry_policy: 1
+
+    ## max retry count for failed event
+    max_retry_count: 10
+
+    ## duration time of retry interval for failed event
+    retry_interval: "5s"
+
+    ## max retry timeout for failed event
+    max_retry_timeout: "2h"
+
+driver:
+    - notifier
+    - queuer
+
+log:
+    # for dev mode, we show the call function in the logfile
+    # otherwise we only record log message
+    mode: dev
+
+    ## log verbosity level: 1: debug, 2: info, 3: warn, 4: error, 5: fatal
+    level: 2
+
+    ## log output prefix
+    prefix: "[eventbus]"
+
+    ## path to log file
+    path: "/opt/ewangplay/eventbus/log"
+
+    ## max size per log file before rolling (megabytes)
+    max_size: 100
+
+    ## rotate log file daily
+    rotate_daily: false
+
+    ## max age per log file (days)
+    max_age: 30
+
+pprof:
+    ## Whether to enable the pprof for debugging
+    enable: true
+
+    ## pprof debug server address
+    address: "0.0.0.0:6060"
+
+redis:
+    ## whether to enable redis service
+    enable: true
+
+    # whether we connect to a redis cluster, default is false
+    cluster: false
+
+    # use , to split redis nodes if we connect to a cluster
+    # address: "127.0.0.1:7001"
+    address: "redis0:6379"
+
+    ## redis connection credential
+    credential: "zhu88jie"
+
+    ## maximum number of idle connections in the pool.
+    max_idle: 30
+
+    ## close connections after remaining idle for this duration
+    idle_timeout: 1m
+
+rabbitmq:
+    ## whether to enable rabbitmq backend
+    enable: false
+
+    ## rabbitmq exchange name setting
+    exchange_name: eventbus
+
+    ## rabbitmq exchange kind setting
+    exchange_kind: topic
+
+    ## rabbitmq address connected to
+    address: "amqp://guest:111111@127.0.0.1:5672/"
+
+    ## whether to enable durable
+    durable: true
+
+    ## whether to enable auto delete
+    auto_delete: true
+
+nsq:
+    ## whether to enable nsq backend
+    enable: true
+
+    ## whether to enable nsq cluster mode
+    cluster: false
+
+    ## max in flight when consuming
+    max_in_flight: 1000
+
+    ## nsqd service address which to connect
+    tcp_address: "127.0.0.1:4150"
+
+    ## lookupd service addresses which to connet
+    lookupd_tcp_addresses: [127.0.0.1:4160]

@@ -35,9 +35,7 @@ BASE_VERSION = 1.0.0
 IS_RELEASE = false
 
 ## Docker Images Parameters
-EBNODE_IMAGE_NAME = eventbus-node
-EBADMIN_IMAGE_NAME = eventbus-admin
-EBSEEKER_IMAGE_NAME = eventbus-seeker
+EVENTBUS_IMAGE_NAME = eventbus
 
 ## Get system info
 UID = $(shell id -u)
@@ -65,36 +63,24 @@ all: srvc checks
 
 checks: linter unit-test #behave
 
-srvc: ebnode ebadmin ebseeker
+srvc: eventbus
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS):
 	cd $@ && $(MAKE)
 
-.PHONY: ebnode
-ebnode: build/bin/ebnode
-
-.PHONY: ebadmin
-ebadmin: build/bin/ebadmin
-
-.PHONY: ebseeker
-ebseeker: build/bin/ebseeker
+.PHONY: eventbus
+eventbus: build/bin/eventbus
 
 .PHONY: docker
-docker-deps: ebnode ebadmin ebseeker
+docker-deps: eventbus
 docker: docker-deps
-	docker build -t $(DOCKER_NS)/$(EBNODE_IMAGE_NAME) -f docker/ebnode/Dockerfile ./
-	docker tag $(DOCKER_NS)/$(EBNODE_IMAGE_NAME) $(DOCKER_NS)/$(EBNODE_IMAGE_NAME):$(PROJECT_VERSION)
-	docker build -t $(DOCKER_NS)/$(EBADMIN_IMAGE_NAME) -f docker/ebadmin/Dockerfile ./
-	docker tag $(DOCKER_NS)/$(EBADMIN_IMAGE_NAME) $(DOCKER_NS)/$(EBADMIN_IMAGE_NAME):$(PROJECT_VERSION)
-	docker build -t $(DOCKER_NS)/$(EBSEEKER_IMAGE_NAME) -f docker/ebseeker/Dockerfile ./
-	docker tag $(DOCKER_NS)/$(EBSEEKER_IMAGE_NAME) $(DOCKER_NS)/$(EBSEEKER_IMAGE_NAME):$(PROJECT_VERSION)
+	docker build -t $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME) -f docker/eventbus/Dockerfile ./
+	docker tag $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME) $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME):$(PROJECT_VERSION)
 
 .PHONY: docker-clean
 docker-clean:
-	docker images -q $(DOCKER_NS)/$(EBNODE_IMAGE_NAME) | uniq | xargs -I '{}' docker rmi -f '{}'
-	docker images -q $(DOCKER_NS)/$(EBADMIN_IMAGE_NAME) | uniq | xargs -I '{}' docker rmi -f '{}'
-	docker images -q $(DOCKER_NS)/$(EBSEEKER_IMAGE_NAME) | uniq | xargs -I '{}' docker rmi -f '{}'
+	docker images -q $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME) | uniq | xargs -I '{}' docker rmi -f '{}'
 
 unit-test: gotools
 	@./scripts/goUnitTests.sh
@@ -102,7 +88,7 @@ unit-test: gotools
 bench: gotools
 	@./scripts/goBenchTests.sh
 
-behave-deps: ebnode
+behave-deps: eventbus
 behave: behave-deps
 	@echo "Running behave tests"
 	@cd bddtests; behave $(BEHAVE_OPTS)

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/ewangplay/eventbus/adapter"
-	"github.com/ewangplay/eventbus/adapter/nsqd"
 	"github.com/ewangplay/eventbus/common"
 	cfg "github.com/ewangplay/eventbus/config"
 	"github.com/ewangplay/eventbus/driver"
@@ -19,7 +18,6 @@ import (
 
 var (
 	logger     *log.Logger
-	nsqdSrv    *nsqd.NsqdService
 	idcounter  *adapter.IDCounter
 	messager   *adapter.Messager
 	jobmgr     *adapter.JobManager
@@ -31,14 +29,14 @@ func main() {
 
 	//New default options
 	opts := cfg.NewOptions()
-	opts.ServiceName = "eventbus-node"
+	opts.ServiceName = "eventbus"
 
 	//New command line flag set
 	flagSet := cfg.NewFlagSet(opts)
 	flagSet.Parse(os.Args[1:])
 
 	if flagSet.Lookup("version").Value.(flag.Getter).Get().(bool) {
-		fmt.Println(metadata.GetVersionInfo(common.ProgramNameEBNode))
+		fmt.Println(metadata.GetVersionInfo("eventbus"))
 		os.Exit(0)
 	}
 
@@ -50,14 +48,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	var kvcfg cfg.KVConfig
-	kvcfg = config.GetConfig()
-	fmt.Printf("kvcfg: %v\n", kvcfg)
-	kvcfg.Validate()
-
 	//Resolves configuration values set via command line flags,
 	//config files, and default struct values
-	options.Resolve(opts, flagSet, kvcfg)
+	options.Resolve(opts, flagSet, config.GetConfig())
 
 	fmt.Printf("EventBus Options: %+v\n", opts)
 
@@ -69,20 +62,6 @@ func main() {
 	}
 
 	opts.Logger = logger
-
-	//New nsqd service
-	if opts.NSQEnable {
-		nsqdSrv, err = nsqd.NewNsqdService()
-		if err != nil {
-			logger.Error("Create NSQD Service Error: %v", err)
-			goto END
-		}
-		err = nsqdSrv.Start(opts)
-		if err != nil {
-			logger.Error("Start NSQD Service Error: %v", err)
-			goto END
-		}
-	}
 
 	//New id counter instance
 	idcounter, err = adapter.NewIdCounter(opts, logger)
@@ -139,10 +118,6 @@ func cleanup() {
 
 	if idcounter != nil {
 		idcounter.Close()
-	}
-
-	if nsqdSrv != nil {
-		nsqdSrv.Stop()
 	}
 
 	if logger != nil {

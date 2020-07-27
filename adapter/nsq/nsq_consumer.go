@@ -2,7 +2,6 @@ package nsq
 
 import (
 	"fmt"
-	"strings"
 
 	c "github.com/ewangplay/eventbus/common"
 	"github.com/ewangplay/eventbus/i"
@@ -67,13 +66,12 @@ func (this *NSQConsumer) subscribe(topic string, messages chan<- i.IMessage) err
 	}
 
 	if !this.isRunning {
-		nsqdNetAddr := fmt.Sprintf("127.0.0.1:%s", strings.Split(this.opts.NSQTCPAddress, ":")[1])
-		err = this.consumer.ConnectToNSQD(nsqdNetAddr)
+		err = this.consumer.ConnectToNSQD(this.opts.NSQTCPAddress)
 		if err == nil {
-			this.Info("Connect to nsqd service[%s] succ", nsqdNetAddr)
+			this.Info("Connect to nsqd service[%s] succ", this.opts.NSQTCPAddress)
 			this.isRunning = true
 		} else {
-			this.Error("Connect to nsqd service[%s] error: %v", nsqdNetAddr, err)
+			this.Error("Connect to nsqd service[%s] error: %v", this.opts.NSQTCPAddress, err)
 		}
 	}
 

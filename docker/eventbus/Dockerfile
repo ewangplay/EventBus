@@ -5,24 +5,18 @@ RUN mkdir -p /opt/ewangplay/eventbus/bin \
         && mkdir -p /opt/ewangplay/eventbus/data \
         && mkdir -p /opt/ewangplay/eventbus/log
 
-ADD build/bin/ebnode /opt/ewangplay/eventbus/bin/ebnode
+ADD build/bin/eventbus /opt/ewangplay/eventbus/bin/eventbus
 
-RUN chmod +x /opt/ewangplay/eventbus/bin/ebnode
+RUN chmod +x /opt/ewangplay/eventbus/bin/eventbus
 
 VOLUME /opt/ewangplay/eventbus/etc
 VOLUME /opt/ewangplay/eventbus/data
 VOLUME /opt/ewangplay/eventbus/log
 
-# nsqd tcp port
-EXPOSE 4150
-
-# nsqd http port
-EXPOSE 4151
-
 # pprof port
 EXPOSE 6060
 
-# eventbus http port
+# http port
 EXPOSE 8091
 
-CMD ["/opt/ewangplay/eventbus/bin/ebnode", "--config=/opt/ewangplay/eventbus/etc/ebnode.yaml"]
+CMD ["/opt/ewangplay/eventbus/bin/eventbus", "--config=/opt/ewangplay/eventbus/etc/eventbus.yaml"]

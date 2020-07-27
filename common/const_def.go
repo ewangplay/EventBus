@@ -41,9 +41,3 @@ const (
 	TLSRequiredExceptHTTP
 	TLSRequired
 )
-
-const (
-	ProgramNameEBAdmin  = "eventbus-admin"
-	ProgramNameEBNode   = "eventbus-node"
-	ProgramNameEBSeeker = "eventbus-seeker"
-)

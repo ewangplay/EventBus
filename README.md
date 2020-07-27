@@ -1,28 +1,8 @@
-# EventBus Microservices
+# EventBus Service
 
-EventBus include following subcompnents.
+- Support `Notifier` and `Queuer` type drivers for event.
 
-- ebnode (eventbus node service)
-
-    - Eventbus core service, implement the distributed message queue.
-
-    - Support `Notifier` and `Queuer` type drivers for event.
-
-    - Provide Restful API to let user to send event -- either `Notifier` or `Queuer` type event.
-
-    - Configurable to be registered to `eventbus seeker` service, so that automatic service discovery is realized.
-
-- ebseeker (eventbus seeker service)
-
-    - EventBus core service, similar to zookeeper, manages multiple eventbus nodes topology information.
-
-    - Eventbus nodes broadcasts topic and channel information to eventbus seeker.
-
-    - Clients query eventbus seeker to discover eventbus node for a specific topic.
-
-- ebadmin (eventbus admin service)
-
-    - Eventbus admin service is a Web UI to view aggregated cluster stats in realtime and perform various administrative tasks.
+- Provide Restful API to let user to send event -- either `Notifier` or `Queuer` type event.
 
 ## Setup
 
@@ -42,25 +22,13 @@ EventBus include following subcompnents.
 
 - Run docker container manually
 
-    - Run eventbus seeker docker
+    - Run eventbus docker 
 
         ```
-        docker run -d --name eventbus-seeker -v /opt/ewangplay/eventbus/log:/opt/ewangplay/eventbus/log -v /opt/ewangplay/eventbus/etc:/opt/ewangplay/eventbus/etc -p 0.0.0.0:4160:4160 -p 0.0.0.0:4161:4161 <eventubs-seeker-image-id>
+        docker run -d --name eventbus -v /opt/ewangplay/eventbus/log:/opt/ewangplay/eventbus/log -v /opt/ewangplay/eventbus/data:/opt/ewangplay/eventbus/data -v /opt/ewangplay/eventbus/etc:/opt/ewangplay/eventbus/etc -p 0.0.0.0:8091:8091 -p 0.0.0.0:4150:4150 -p 0.0.0.0:4151:4151 <eventbus-image-id>
         ```
 
-    - Run eventbus node docker 
-
-        ```
-        docker run -d --name eventbus-node -v /opt/ewangplay/eventbus/log:/opt/ewangplay/eventbus/log -v /opt/ewangplay/eventbus/data:/opt/ewangplay/eventbus/data -v /opt/ewangplay/eventbus/etc:/opt/ewangplay/eventbus/etc -p 0.0.0.0:8091:8091 -p 0.0.0.0:4150:4150 -p 0.0.0.0:4151:4151 <eventbus-node-image-id>
-        ```
-
-    - Run eventbus admin docker
-
-        ```
-        docker run -d --name eventbus-admin -v /opt/ewangplay/eventbus/log:/opt/ewangplay/eventbus/log -v /opt/ewangplay/eventbus/etc:/opt/ewangplay/eventbus/etc -p 0.0.0.0:4171:4171 <eventbus-admin-image-id>
-        ```
-
-    __Note:__ Volume option (/opt/ewangplay/eventbus/etc), the directory should contains the eventbus services configure files: [ebseeker.cfg](./docker/config/ebseeker.cfg.example), [ebnode.yaml](./docker/config/ebnode.yaml.example), [ebadmin.cfg](./docker/config/ebadmin.cfg.example)
+    __Note:__ Volume option (/opt/ewangplay/eventbus/etc), the directory should contains the eventbus services configure files: [eventbus.yaml](./docker/config/eventbus.yaml.example).
 
 ### Manual Setup
 
@@ -93,24 +61,11 @@ EventBus include following subcompnents.
 
 - Start eventbus services
 
-    - Start eventbus seeker service
+	```
+	$ ./build/bin/eventbus --config=/path/to/eventbus.yaml
+	```
 
-        ```
-        $ ./build/bin/ebseeker --config=/path/to/ebseeker.cfg
-        ```
-
-    - Start eventbus node service
-
-        ```
-        $ ./build/bin/ebnode --config=/path/to/ebnode.yaml
-        ```
-
-    - Start eventbus admin service
-
-        ```
-        $ ./build/bin/ebadmin --config=/path/to/ebadmin.cfg
-        ```
-        __Note:__ Services can be obtained sample configure files from [example config](./docker/config) dir. Copy and mofify these files to fit your service instance.
+	__Note:__ Services can be obtained sample configure files from [example config](./docker/config) dir. Copy and mofify these files to fit your service instance.
 
 ## Sample Cluster
 
@@ -122,8 +77,6 @@ After build the eventbus docker images, you can use the sample cluster solution 
     cd ./docker/cluster 
     ./network_setup.sh up 
     ```
-
-	This test cluster contains one eventbus-seeker, three eventbus-nodes and one eventbus-admin.
 
 - Clean the test cluster:
 

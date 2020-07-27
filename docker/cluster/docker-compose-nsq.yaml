@@ -1,0 +1,87 @@
+version: '2.0'
+
+networks:
+  eventbus:
+
+services:
+
+  nsqlookupd0:
+    container_name: nsqlookupd0
+    image: ${NSQ_IMAGE}:${NSQ_TAG}
+    working_dir: /opt/nsqio/nsq
+    command: /nsqlookupd --config=/opt/nsqio/nsq/etc/nsqlookupd.cfg
+    ports:
+      - 4160:4160
+      - 4161:4161
+    volumes:
+      - /opt/nsqio/nsq/nsqlookupd0/log:/opt/nsqio/nsq/log
+      - /opt/nsqio/nsq/nsqlookupd0/etc:/opt/nsqio/nsq/etc
+    networks:
+      - eventbus
+
+  nsqd0:
+    container_name: nsqd0
+    image: ${NSQ_IMAGE}:${NSQ_TAG}
+    working_dir: /opt/nsqio/nsq
+    command: /nsqd --config=/opt/nsqio/nsq/etc/nsqd.cfg
+    ports:
+      - 4150:4150
+      - 4151:4151
+    volumes:
+      - /opt/nsqio/nsq/nsqd0/log:/opt/nsqio/nsq/log
+      - /opt/nsqio/nsq/nsqd0/data:/opt/nsqio/nsq/data
+      - /opt/nsqio/nsq/nsqd0/etc:/opt/nsqio/nsq/etc
+    depends_on:
+      - nsqlookupd0
+    networks:
+      - eventbus
+
+  nsqd1:
+    container_name: nsqd1
+    image: ${NSQ_IMAGE}:${NSQ_TAG}
+    working_dir: /opt/nsqio/nsq
+    command: /nsqd --config=/opt/nsqio/nsq/etc/nsqd.cfg
+    ports:
+      - 5150:5150
+      - 5151:5151
+    volumes:
+      - /opt/nsqio/nsq/nsqd1/log:/opt/nsqio/nsq/log
+      - /opt/nsqio/nsq/nsqd1/data:/opt/nsqio/nsq/data
+      - /opt/nsqio/nsq/nsqd1/etc:/opt/nsqio/nsq/etc
+    depends_on:
+      - nsqlookupd0
+    networks:
+      - eventbus
+
+  nsqd2:
+    container_name: nsqd2
+    image: ${NSQ_IMAGE}:${NSQ_TAG}
+    working_dir: /opt/nsqio/nsq
+    command: /nsqd --config=/opt/nsqio/nsq/etc/nsqd.cfg
+    ports:
+      - 6150:6150
+      - 6151:6151
+    volumes:
+      - /opt/nsqio/nsq/nsqd2/log:/opt/nsqio/nsq/log
+      - /opt/nsqio/nsq/nsqd2/data:/opt/nsqio/nsq/data
+      - /opt/nsqio/nsq/nsqd2/etc:/opt/nsqio/nsq/etc
+    depends_on:
+      - nsqlookupd0
+    networks:
+      - eventbus
+
+  nsqadmin:
+    container_name: nsqadmin
+    image: ${NSQ_IMAGE}:${NSQ_TAG}
+    working_dir: /opt/nsqio/nsq
+    command: /nsqadmin --config=/opt/nsqio/nsq/etc/nsqadmin.cfg
+    ports:
+      - 4171:4171
+    volumes:
+      - /opt/nsqio/nsq/nsqadmin/log:/opt/nsqio/nsq/log
+      - /opt/nsqio/nsq/nsqadmin/etc:/opt/nsqio/nsq/etc
+    depends_on:
+      - nsqlookupd0
+      - nsqd0
+    networks:
+      - eventbus
