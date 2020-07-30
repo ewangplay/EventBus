@@ -23,7 +23,7 @@ type EB_Options struct {
 	// log options
 	Logger         i.ILogger
 	LogMode        string   `flag:"log-mode"`
-	LogLevel       LogLevel `flag:"log-level"`
+	LogLevel       string `flag:"log-level"`
 	LogPrefix      string   `flag:"log-prefix"`
 	LogPath        string   `flag:"log-path"`
 	LogMaxSize     int64    `flag:"log-max-size"`
@@ -73,7 +73,7 @@ func NewOptions() *EB_Options {
 		Drivers: make([]string, 0),
 
 		LogMode:        "normal",
-		LogLevel:       2,
+		LogLevel:       "info",
 		LogPrefix:      "[EventBus] ",
 		LogPath:        "/opt/ewangplay/eventbus/log",
 		LogMaxSize:     100,

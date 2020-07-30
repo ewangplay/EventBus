@@ -1,5 +1,7 @@
 package config
 
+import "strings"
+
 type LogLevel int
 
 const (
@@ -24,4 +26,23 @@ func (l LogLevel) String() string {
 		return "FATAL"
 	}
 	panic("invalid LogLevel")
+}
+
+func ParseLogLevel(levelstr string) LogLevel {
+	lvl := INFO
+	switch strings.ToLower(levelstr) {
+	case "debug":
+		lvl = DEBUG
+	case "info":
+		lvl = INFO
+	case "warn":
+		lvl = WARN
+	case "error":
+		lvl = ERROR
+	case "fatal":
+		lvl = FATAL
+	default:
+		lvl = INFO
+	}
+	return lvl
 }

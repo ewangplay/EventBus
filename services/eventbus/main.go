@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/ewangplay/eventbus/adapter"
-	"github.com/ewangplay/eventbus/common"
 	cfg "github.com/ewangplay/eventbus/config"
 	"github.com/ewangplay/eventbus/driver"
 	"github.com/ewangplay/eventbus/log"

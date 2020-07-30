@@ -6,7 +6,7 @@
         "retry_interval": 2,
         "retry_timeout": 7200,
         "retry_policy": 1,
-        "target_url": "http://172.16.199.6:8091/v1/test",
+        "target_url": "http://localhost:8091/v1/test",
         "body": {
             "subject": "bocpoints-704fd8a2-dc25-4076-92df-d434e3d7e31f",
             "eventType": 1,

@@ -27,7 +27,7 @@ func NewFlagSet(opts *EB_Options) *flag.FlagSet {
 
 	// log flags
 	flagSet.String("log-mode", "normal", "set log mode: normal, dev")
-	flagSet.Int("log-level", 2, "set log verbosity: 1: debug, 2: info, 3: warn, 4: error, 5: fatal")
+	flagSet.String("log-level", "info", "set log verbosity: 1: debug, 2: info, 3: warn, 4: error, 5: fatal")
 	flagSet.String("log-prefix", "[EventBus] ", "log message prefix")
 	flagSet.String("log-path", opts.LogPath, "path to log files")
 	flagSet.Int64("log-max-size", opts.LogMaxSize, "max size per log file before rolling (megabytes)")
@@ -47,12 +47,20 @@ func NewFlagSet(opts *EB_Options) *flag.FlagSet {
 	flagSet.Duration("redis-idle-timeout", opts.RedisIdleTimeout, "close connections after remaining idle for this duration")
 
 	// rabbitmq flags
-	flagSet.Bool("rabbitmq-enable", false, "whether to enable rabbitmq service")
+	flagSet.Bool("rabbitmq-enable", opts.RabbitmqEnable, "whether to enable rabbitmq service")
 	flagSet.String("rabbitmq-address", opts.RabbitmqAddress, "<addr>:<port> to connect rabbitmq service")
 	flagSet.String("rabbitmq-exchange-name", opts.RabbitmqExchangeName, "rabbitmq exchange name setting")
 	flagSet.String("rabbitmq-exchange-kind", opts.RabbitmqExchangeKind, "rabbitmq exchange kind setting")
 	flagSet.Bool("rabbitmq-durable", opts.RabbitmqDurable, "rabbitmq durable flag")
 	flagSet.Bool("rabbitmq-auto-delete", opts.RabbitmqAutoDelete, "rabbitmq auto-delete flag")
+
+	// nsq flags
+	flagSet.Bool("nsq-enable", opts.NSQEnable, "whether to enable nsqd service")
+	flagSet.Bool("nsq-cluster", opts.NSQCluster, "whether to enable nsqd cluster")
+	flagSet.Int("nsq-max-in-flight", opts.NSQMaxInFlight, "Maximum number of messages to allow in flight")
+	flagSet.String("nsq-tcp-address", opts.NSQTCPAddress, "<addr>:<port> to listen on for TCP clients")
+	lookupdTCPAddrs := utils.StringArray{}
+	flagSet.Var(&lookupdTCPAddrs, "nsq-lookupd-tcp-address", "lookupd TCP address (may be given multiple times)")
 
 	return flagSet
 }

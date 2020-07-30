@@ -34,10 +34,3 @@ const (
 	ERP_COUNT = 1 + iota
 	ERP_TIMEOUT
 )
-
-//TLS define
-const (
-	TLSNotRequired = iota
-	TLSRequiredExceptHTTP
-	TLSRequired
-)
