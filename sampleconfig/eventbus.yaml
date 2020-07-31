@@ -22,18 +22,11 @@ driver:
     - queuer
 
 log:
-    # for dev mode, we show the call function in the logfile
-    # otherwise we only record log message
-    mode: dev
-
-    ## log verbosity level: 1: debug, 2: info, 3: warn, 4: error, 5: fatal
-    level: 2
-
-    ## log output prefix
-    prefix: "[eventbus]"
+    ## log verbosity level: debug, info, warn, error, fatal
+    level: info
 
     ## path to log file
-    path: "/opt/ewangplay/eventbus/log"
+    path: "/opt/eventbus/log"
 
     ## max size per log file before rolling (megabytes)
     max_size: 100
@@ -46,7 +39,7 @@ log:
 
 pprof:
     ## Whether to enable the pprof for debugging
-    enable: true
+    enable: false
 
     ## pprof debug server address
     address: "0.0.0.0:6060"
@@ -59,11 +52,10 @@ redis:
     cluster: false
 
     # use , to split redis nodes if we connect to a cluster
-    # address: "127.0.0.1:7001"
-    address: "redis0:6379"
+    address: "127.0.0.1:6379"
 
-    ## redis connection credential
-    credential: "zhu88jie"
+    ## redis connection auth credential
+    credential: ""
 
     ## maximum number of idle connections in the pool.
     max_idle: 30

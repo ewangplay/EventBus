@@ -26,21 +26,19 @@ func NewFlagSet(opts *EB_Options) *flag.FlagSet {
 	flagSet.Var(&drivers, "driver", "driver to enable(may be given multiple times)")
 
 	// log flags
-	flagSet.String("log-mode", "normal", "set log mode: normal, dev")
-	flagSet.String("log-level", "info", "set log verbosity: 1: debug, 2: info, 3: warn, 4: error, 5: fatal")
-	flagSet.String("log-prefix", "[EventBus] ", "log message prefix")
+	flagSet.String("log-level", opts.LogLevel, "set log verbosity: 1: debug, 2: info, 3: warn, 4: error, 5: fatal")
 	flagSet.String("log-path", opts.LogPath, "path to log files")
 	flagSet.Int64("log-max-size", opts.LogMaxSize, "max size per log file before rolling (megabytes)")
 	flagSet.Bool("log-rotate-daily", opts.LogRotateDaily, "whether the log file rotate daily")
 	flagSet.Int("log-max-age", opts.LogMaxAge, "max age per log file (days)")
 
 	// pprof flags
-	flagSet.Bool("pprof-enable", false, "whether to enable pprof debug")
+	flagSet.Bool("pprof-enable", opts.PProfEnable, "whether to enable pprof debug")
 	flagSet.String("pprof-address", opts.PProfAddress, "pprof debug service address")
 
 	// redis flags
-	flagSet.Bool("redis-enable", true, "whether to enable redis service")
-	flagSet.Bool("redis-cluster", false, "whether to enable redis cluster")
+	flagSet.Bool("redis-enable", opts.RedisEnable, "whether to enable redis service")
+	flagSet.Bool("redis-cluster", opts.RedisCluster, "whether to enable redis cluster")
 	flagSet.String("redis-address", opts.RedisAddress, "<addr>:<port> to connect redis service")
 	flagSet.String("redis-credential", opts.RedisCredential, "redis connection credential")
 	flagSet.Int("redis-max-idle", opts.RedisMaxIdle, "maximum number of idle connections in the pool.")

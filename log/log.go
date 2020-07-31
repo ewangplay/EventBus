@@ -10,7 +10,6 @@ import (
 
 type Logger struct {
 	service_name  string
-	log_prefix    string
 	cfgLevel      config.LogLevel
 	logger        *logger.Logger
 	rotate_writer *RotateWriter
@@ -36,7 +35,6 @@ func New(opts *config.EB_Options) (log *Logger, err error) {
 
 	log = &Logger{
 		service_name:  service,
-		log_prefix:    opts.LogPrefix,
 		cfgLevel:      config.ParseLogLevel(opts.LogLevel),
 		logger:        logger,
 		rotate_writer: rotate_writer,

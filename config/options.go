@@ -22,9 +22,7 @@ type EB_Options struct {
 
 	// log options
 	Logger         i.ILogger
-	LogMode        string   `flag:"log-mode"`
 	LogLevel       string `flag:"log-level"`
-	LogPrefix      string   `flag:"log-prefix"`
 	LogPath        string   `flag:"log-path"`
 	LogMaxSize     int64    `flag:"log-max-size"`
 	LogRotateDaily bool     `flag:"log-rotate-daily"`
@@ -72,10 +70,8 @@ func NewOptions() *EB_Options {
 
 		Drivers: make([]string, 0),
 
-		LogMode:        "normal",
 		LogLevel:       "info",
-		LogPrefix:      "[EventBus] ",
-		LogPath:        "/opt/ewangplay/eventbus/log",
+		LogPath:        "/opt/eventbus/log",
 		LogMaxSize:     100,
 		LogRotateDaily: false,
 		LogMaxAge:      30,
@@ -85,7 +81,7 @@ func NewOptions() *EB_Options {
 
 		RedisEnable:      true,
 		RedisCluster:     false,
-		RedisAddress:     "127.0.0.1:7001",
+		RedisAddress:     "127.0.0.1:6379",
 		RedisMaxIdle:     30,
 		RedisIdleTimeout: 1 * time.Minute,
 

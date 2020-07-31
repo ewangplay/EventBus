@@ -19,8 +19,6 @@
 #   - checks - runs all tests/checks
 #   - srvc - builds services binary
 #   - unit-test - runs the go-test based unit tests
-#   - behave - runs the behave test
-#   - behave-deps - ensures pre-requisites are availble for running behave manually
 #   - gotools - installs go tools like golint
 #   - linter - runs all code checks
 #   - clean - cleans the build area
@@ -61,7 +59,7 @@ PROJECT_FILES = $(shell git ls-files)
 
 all: srvc checks
 
-checks: linter unit-test #behave
+checks: linter unit-test
 
 srvc: eventbus
 
@@ -75,7 +73,7 @@ eventbus: build/bin/eventbus
 .PHONY: docker
 docker-deps: eventbus
 docker: docker-deps
-	docker build -t $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME) -f docker/eventbus/Dockerfile ./
+	docker build -t $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME) -f docker/Dockerfile ./
 	docker tag $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME) $(DOCKER_NS)/$(EVENTBUS_IMAGE_NAME):$(PROJECT_VERSION)
 
 .PHONY: docker-clean
@@ -84,14 +82,6 @@ docker-clean:
 
 unit-test: gotools
 	@./scripts/goUnitTests.sh
-
-bench: gotools
-	@./scripts/goBenchTests.sh
-
-behave-deps: eventbus
-behave: behave-deps
-	@echo "Running behave tests"
-	@cd bddtests; behave $(BEHAVE_OPTS)
 
 linter: gotools
 	@echo "LINT: Running code checks.."
@@ -128,4 +118,13 @@ clean: docker-clean
 
 .PHONY: dist-clean
 dist-clean: clean gotools-clean
-	-@rm -rf /opt/$(ORG_NAME)/eventbus/* ||:
+	-@rm -rf /opt/eventbus/* ||:
+
+.PHONY: install
+install: eventbus
+	@mkdir -p /opt/eventbus/bin
+	@cp build/bin/eventbus /opt/eventbus/bin/
+	@mkdir -p /opt/eventbus/etc 
+	@cp sampleconfig/eventbus.yaml /opt/eventbus/etc/
+	@mkdir -p /opt/eventbus/log
+	@echo "Eventbus installed successfully"
