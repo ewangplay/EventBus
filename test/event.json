@@ -1,11 +1,10 @@
 {
     "subject": "payment",
     "type": "notifier",
-    "session_id": "123",
-    "retry_count": 100,
-    "retry_interval": 2,
-    "retry_timeout": 7200,
-    "retry_policy": 1,
+    "retryCount": 100,
+    "retryInterval": 2,
+    "retryTimeout": 7200,
+    "retryPolicy": 1,
     "target_url": "http://localhost:8091/v1/test",
     "body": {
         "subject": "bocpoints-704fd8a2-dc25-4076-92df-d434e3d7e31f",

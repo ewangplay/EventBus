@@ -7,35 +7,37 @@ import (
 	"time"
 )
 
-//max size per log file: 100M
-const LOG_FILE_MAX_SIZE = 100
+// LogFileMaxSize max size per log file: 100M
+const LogFileMaxSize = 100
 
+// RotateWriter struct define
 type RotateWriter struct {
-	lock         sync.Mutex
-	filename     string
-	max_size     int64
-	rotate_daily bool
-	curr_date    string
-	fp           *os.File
-	quit         chan int
+	lock        sync.Mutex
+	filename    string
+	maxSize     int64
+	rotateDaily bool
+	currDate    string
+	fp          *os.File
+	quit        chan int
 }
 
-// Make a new RotateWriter. Return nil if error occurs during setup.
-func NewRotateWriter(filename string, max_size int64, rotate_daily bool) (*RotateWriter, error) {
-	w := &RotateWriter{filename: filename, max_size: max_size, rotate_daily: rotate_daily}
+// NewRotateWriter make a new RotateWriter. Return nil if error occurs during setup.
+func NewRotateWriter(filename string, maxSize int64, rotateDaily bool) (*RotateWriter, error) {
+	w := &RotateWriter{filename: filename, maxSize: maxSize, rotateDaily: rotateDaily}
 	err := w.rotate()
 	if err != nil {
 		return nil, err
 	}
-	if w.max_size == 0 {
-		w.max_size = LOG_FILE_MAX_SIZE
+	if w.maxSize == 0 {
+		w.maxSize = LogFileMaxSize
 	}
-	w.curr_date = time.Now().Format("2006-01-02")
+	w.currDate = time.Now().Format("2006-01-02")
 	w.quit = make(chan int)
 	go w.autoRotate(w.quit)
 	return w, nil
 }
 
+// Close ...
 func (w *RotateWriter) Close() error {
 	if w.quit != nil {
 		close(w.quit)
@@ -71,8 +73,8 @@ func (w *RotateWriter) rotate() (err error) {
 	fileinfo, err := os.Stat(w.filename)
 	if err == nil {
 		if fileinfo.Size() > 0 {
-			backup_filename := w.filename + "." + time.Now().Format("2006-01-02_15:04:05")
-			err = os.Rename(w.filename, backup_filename)
+			backupFilename := w.filename + "." + time.Now().Format("2006-01-02_15:04:05")
+			err = os.Rename(w.filename, backupFilename)
 			if err != nil {
 				return
 			}
@@ -96,7 +98,7 @@ func (w *RotateWriter) autoRotate(quit chan int) {
 			//check log file size
 			fileinfo, err := os.Stat(w.filename)
 			if err == nil {
-				if fileinfo.Size() >= w.max_size*1024*1024 {
+				if fileinfo.Size() >= w.maxSize*1024*1024 {
 					//rotate log file
 					fmt.Printf("start to rotate log file...\n")
 					err = w.rotate()
@@ -108,9 +110,9 @@ func (w *RotateWriter) autoRotate(quit chan int) {
 			}
 
 			//check date
-			if w.rotate_daily {
+			if w.rotateDaily {
 				date := time.Now().Format("2006-01-02")
-				if date != w.curr_date {
+				if date != w.currDate {
 					if fileinfo.Size() > 0 {
 						//rotate log file
 						fmt.Printf("start to rotate log file...\n")
@@ -118,7 +120,7 @@ func (w *RotateWriter) autoRotate(quit chan int) {
 						if err != nil {
 							fmt.Printf("rotate log file fail: %v\n", err)
 						} else {
-							w.curr_date = date
+							w.currDate = date
 						}
 						continue
 					}

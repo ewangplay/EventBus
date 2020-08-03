@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
+// FloatArray type define
 type FloatArray []float64
 
+// Set append param to float array
 func (a *FloatArray) Set(param string) error {
 	for _, s := range strings.Split(param, ",") {
 		v, err := strconv.ParseFloat(s, 64)

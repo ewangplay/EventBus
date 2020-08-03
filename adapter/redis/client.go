@@ -7,17 +7,17 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-type RedisClient struct {
-	ctx  *RedisContext
+type Client struct {
+	ctx  *Context
 	pool *redis.Pool
 	sync *redsync.Redsync
 }
 
-func NewRedisClient(ctx *RedisContext) (*RedisClient, error) {
-	this := &RedisClient{}
+func NewClient(ctx *Context) (*Client, error) {
+	rc := &Client{}
 
-	this.ctx = ctx
-	this.pool = &redis.Pool{
+	rc.ctx = ctx
+	rc.pool = &redis.Pool{
 		MaxIdle:     ctx.opts.RedisMaxIdle,
 		IdleTimeout: ctx.opts.RedisIdleTimeout,
 		Dial: func() (redis.Conn, error) {
@@ -39,46 +39,46 @@ func NewRedisClient(ctx *RedisContext) (*RedisClient, error) {
 		},
 	}
 
-	this.sync = redsync.New([]redsync.Pool{this.pool})
+	rc.sync = redsync.New([]redsync.Pool{rc.pool})
 
-	return this, nil
+	return rc, nil
 }
 
-func (this *RedisClient) Close() error {
-	return this.pool.Close()
+func (rc *Client) Close() error {
+	return rc.pool.Close()
 }
 
-func (this *RedisClient) GetRedisSync() *redsync.Redsync {
-	return this.sync
+func (rc *Client) GetRedisSync() *redsync.Redsync {
+	return rc.sync
 }
 
-func (this *RedisClient) Incr(key string) (uint64, error) {
-	conn := this.pool.Get()
+func (rc *Client) Incr(key string) (uint64, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.Uint64(conn.Do("INCR", key))
 }
 
-func (this *RedisClient) Exists(key string) (bool, error) {
-	conn := this.pool.Get()
+func (rc *Client) Exists(key string) (bool, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.Bool(conn.Do("EXISTS", key))
 }
 
-func (this *RedisClient) Get(key string) (string, error) {
-	conn := this.pool.Get()
+func (rc *Client) Get(key string) (string, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.String(conn.Do("GET", key))
 }
 
-func (this *RedisClient) Set(key string, value string) error {
-	conn := this.pool.Get()
+func (rc *Client) Set(key string, value string) error {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	_, err := conn.Do("SET", key, value)
 	return err
 }
 
-func (this *RedisClient) HDel(key, field string) error {
-	conn := this.pool.Get()
+func (rc *Client) HDel(key, field string) error {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	_, err := conn.Do("HDEL", key, field)
 	if err != nil {
@@ -88,38 +88,38 @@ func (this *RedisClient) HDel(key, field string) error {
 	return nil
 }
 
-func (this *RedisClient) HExists(key, field string) (bool, error) {
-	conn := this.pool.Get()
+func (rc *Client) HExists(key, field string) (bool, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.Bool(conn.Do("HEXISTS", key, field))
 }
 
-func (this *RedisClient) HGet(key, field string) ([]byte, error) {
-	conn := this.pool.Get()
+func (rc *Client) HGet(key, field string) ([]byte, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.Bytes(conn.Do("HGET", key, field))
 }
 
-func (this *RedisClient) HGetAll(key string) (map[string]string, error) {
-	conn := this.pool.Get()
+func (rc *Client) HGetAll(key string) (map[string]string, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.StringMap(conn.Do("HGETALL", key))
 }
 
-func (this *RedisClient) HKeys(key string) ([]string, error) {
-	conn := this.pool.Get()
+func (rc *Client) HKeys(key string) ([]string, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.Strings(conn.Do("HKEYS", key))
 }
 
-func (this *RedisClient) HLen(key string) (uint64, error) {
-	conn := this.pool.Get()
+func (rc *Client) HLen(key string) (uint64, error) {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	return redis.Uint64(conn.Do("HLEN", key))
 }
 
-func (this *RedisClient) HSet(key, field string, value []byte) error {
-	conn := this.pool.Get()
+func (rc *Client) HSet(key, field string, value []byte) error {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	_, err := conn.Do("HSET", key, field, value)
 	if err != nil {
@@ -128,8 +128,8 @@ func (this *RedisClient) HSet(key, field string, value []byte) error {
 	return nil
 }
 
-func (this *RedisClient) HSetNX(key, field string, value []byte) error {
-	conn := this.pool.Get()
+func (rc *Client) HSetNX(key, field string, value []byte) error {
+	conn := rc.pool.Get()
 	defer conn.Close()
 	_, err := conn.Do("HSETNX", key, field, value)
 	if err != nil {

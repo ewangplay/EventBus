@@ -1,8 +1,9 @@
 package i
 
-type IEvent interface {
-	IMessage
-	GetId() string
+// Event interface define
+type Event interface {
+	Message
+	GetID() string
 	GetType() string
 	GetStatus() int
 	GetRetryCount() int

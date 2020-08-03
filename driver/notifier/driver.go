@@ -10,29 +10,33 @@ import (
 	"github.com/ewangplay/eventbus/utils"
 )
 
+// Notifier struct define
 type Notifier struct {
-	i.ILogger
-	i.IStater
+	i.Logger
+	i.Stater
 }
 
-func NewNotifier(logger i.ILogger, stater i.IStater) (*Notifier, error) {
-	this := &Notifier{ILogger: logger, IStater: stater}
-	return this, nil
+// NewNotifier new notifier driver
+func NewNotifier(logger i.Logger, stater i.Stater) (*Notifier, error) {
+	n := &Notifier{Logger: logger, Stater: stater}
+	return n, nil
 }
 
-func (this *Notifier) GetType() string {
+// GetType get driver's type
+func (n *Notifier) GetType() string {
 	return "notifier"
 }
 
-func (this *Notifier) Process(messages <-chan i.IMessage) error {
+// Process ...
+func (n *Notifier) Process(messages <-chan i.Message) error {
 	go func() {
 		var err error
-		var msg i.IMessage
+		var msg i.Message
 
 		for msg = range messages {
-			err = this.processMessage(msg)
+			err = n.processMessage(msg)
 			if err != nil {
-				this.Error("Process message[%s:%s] error: %v", msg.GetSubject(), msg.GetData())
+				n.Error("Process message[%s:%s] error: %v", msg.GetSubject(), msg.GetData())
 			}
 		}
 	}()
@@ -40,65 +44,65 @@ func (this *Notifier) Process(messages <-chan i.IMessage) error {
 	return nil
 }
 
-func (this *Notifier) processMessage(msg i.IMessage) error {
+func (n *Notifier) processMessage(msg i.Message) error {
 	var err error
 
-	if msg.GetSubject() != this.GetType() {
-		this.Error("message subject[%s] dismatch driver type[%s], drop it...", msg.GetSubject(), this.GetType())
+	if msg.GetSubject() != n.GetType() {
+		n.Error("message subject[%s] dismatch driver type[%s], drop it...", msg.GetSubject(), n.GetType())
 		return fmt.Errorf("message subject dismatch driver type")
 	}
 
 	//Parse event from message body
-	var event c.EB_Event
+	var event c.EBEvent
 	data := msg.GetData()
 	err = json.Unmarshal(data, &event)
 	if err != nil {
-		this.Error("Parse message body[%v] error：%v", data, err)
+		n.Error("Parse message body[%v] error：%v", data, err)
 		return err
 	}
 
-	if event.Status != c.ES_INIT {
-		this.Error("invalid event status: %v", event.Status)
+	if event.Status != c.EventStatusInit {
+		n.Error("invalid event status: %v", event.Status)
 		return fmt.Errorf("invalid event status: %v", event.Status)
 	}
 
 	//Check the event status
-	event.Status = c.ES_DEAL
-	event.UpdateTime = time.Now().Format(c.TIME_FORMAT)
-	this.PutState(event)
+	event.Status = c.EventStatusDeal
+	event.UpdateTime = time.Now().Format(c.TimeFormat)
+	n.PutState(event)
 
-	this.Debug("Processing event [%s] start...", event.EventId)
+	n.Debug("Processing event [%s] start...", event.EventID)
 
 	//PUsh the event body to target url
 	var result []byte
 
 	data, err = json.Marshal(event.Body)
 	if err != nil {
-		this.Error("Marshal event body[%v] error: %v", event.Body, err)
+		n.Error("Marshal event body[%v] error: %v", event.Body, err)
 		goto END
 	}
 
-	result, err = utils.HttpPost(event.TargetUrl, data)
+	result, err = utils.HTTPPost(event.TargetURL, data)
 	if err != nil {
-		this.Error("Post event to target url[%s] error: %v", event.TargetUrl, err)
+		n.Error("Post event to target url[%s] error: %v", event.TargetURL, err)
 		goto END
 	}
 	if result != nil {
-		this.Info("Response result: %s", string(result))
+		n.Info("Response result: %s", string(result))
 	}
 
-	this.Debug("Processing event [%s] done", event.EventId)
+	n.Debug("Processing event [%s] done", event.EventID)
 
 END:
 	//Set the event status
 	if err == nil {
-		event.Status = c.ES_SUCC
+		event.Status = c.EventStatusSucc
 	} else {
 		event.RetryCount--
-		event.Status = c.ES_FAIL
+		event.Status = c.EventStatusFail
 	}
-	event.UpdateTime = time.Now().Format(c.TIME_FORMAT)
-	this.PutState(event)
+	event.UpdateTime = time.Now().Format(c.TimeFormat)
+	n.PutState(event)
 
 	return err
 }

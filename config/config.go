@@ -8,11 +8,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config parse eventbus service configure
 type Config struct {
 	viper *viper.Viper
 	cfg   map[string]interface{}
 }
 
+// New instance of Config
 func New(filename string) (config *Config, err error) {
 	config = &Config{}
 
@@ -44,22 +46,23 @@ func New(filename string) (config *Config, err error) {
 	return config, nil
 }
 
-func (this *Config) GetConfig() map[string]interface{} {
-	if this.cfg != nil {
-		return this.cfg
+// GetConfig returns K-V structure configure data
+func (c *Config) GetConfig() map[string]interface{} {
+	if c.cfg != nil {
+		return c.cfg
 	}
 
-	if this.viper != nil {
-		this.cfg = make(map[string]interface{})
+	if c.viper != nil {
+		c.cfg = make(map[string]interface{})
 
-		this.convertSettings("", this.viper.AllSettings(), this.cfg)
+		c.convertSettings("", c.viper.AllSettings(), c.cfg)
 
-		return this.cfg
+		return c.cfg
 	}
 	return nil
 }
 
-func (this *Config) convertSettings(parent string, src map[string]interface{}, dest map[string]interface{}) {
+func (c *Config) convertSettings(parent string, src map[string]interface{}, dest map[string]interface{}) {
 	var key string
 	for k, v := range src {
 		key = k
@@ -69,7 +72,7 @@ func (this *Config) convertSettings(parent string, src map[string]interface{}, d
 
 		mv, ok := v.(map[string]interface{})
 		if ok {
-			this.convertSettings(key, mv, dest)
+			c.convertSettings(key, mv, dest)
 		} else {
 			dest[key] = v
 		}

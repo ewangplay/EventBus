@@ -6,27 +6,28 @@ import (
 	"github.com/ewangplay/eventbus/i"
 )
 
-type EB_Options struct {
+// EBOptions struct of EventBus options
+type EBOptions struct {
 	ServiceName string
 
 	// eventbus options
 	EBHTTPAddress     string        `flag:"http-address" cfg:"eventbus_http_address"`
 	EBUrlPattern      string        `flag:"url-pattern" cfg:"eventbus_url_pattern"`
-	EBRetryPolicy     int           `flag:"retry-policy" cfg:"eventbus_retry_policy"`
-	EBMaxRetryCount   int           `flag:"max-retry-count" cfg:"eventbus_max_retry_count"`
-	EBRetryInterval   time.Duration `flag:"retry-interval" cfg:"eventbus_retry_interval"`
-	EBMaxRetryTimeout time.Duration `flag:"max-retry-timeout" cfg:"eventbus_max_retry_timeout"`
+	EBRetryPolicy     int           `flag:"retry-policy" cfg:"eventbus_retryPolicy"`
+	EBMaxRetryCount   int           `flag:"max-retry-count" cfg:"eventbus_max_retryCount"`
+	EBRetryInterval   time.Duration `flag:"retry-interval" cfg:"eventbus_retryInterval"`
+	EBMaxRetryTimeout time.Duration `flag:"max-retry-timeout" cfg:"eventbus_max_retryTimeout"`
 
 	// driver options
 	Drivers []string `flag:"driver"`
 
 	// log options
-	Logger         i.ILogger
+	Logger         i.Logger
 	LogLevel       string `flag:"log-level"`
-	LogPath        string   `flag:"log-path"`
-	LogMaxSize     int64    `flag:"log-max-size"`
-	LogRotateDaily bool     `flag:"log-rotate-daily"`
-	LogMaxAge      int      `flag:"log-max-age"`
+	LogPath        string `flag:"log-path"`
+	LogMaxSize     int64  `flag:"log-max-size"`
+	LogRotateDaily bool   `flag:"log-rotate-daily"`
+	LogMaxAge      int    `flag:"log-max-age"`
 
 	// pprof options
 	PProfEnable  bool   `flag:"pprof-enable"`
@@ -49,16 +50,17 @@ type EB_Options struct {
 	RabbitmqAutoDelete   bool   `flag:"rabbitmq-auto-delete"`
 
 	// nsq options
-	NSQEnable  bool `flag:"nsq-enable"`
-	NSQCluster bool `flag:"nsq-cluster"`
-	NSQMaxInFlight int `flag:"nsq-max-in-flight"`
+	NSQEnable              bool     `flag:"nsq-enable"`
+	NSQCluster             bool     `flag:"nsq-cluster"`
+	NSQMaxInFlight         int      `flag:"nsq-max-in-flight"`
 	NSQTCPAddress          string   `flag:"nsq-tcp-address"`
 	NSQLookupdTCPAddresses []string `flag:"nsq-lookupd-tcp-address" cfg:"nsq_lookupd_tcp_addresses"`
 }
 
-func NewOptions() *EB_Options {
+// NewOptions returns default EventBus Options
+func NewOptions() *EBOptions {
 
-	return &EB_Options{
+	return &EBOptions{
 		ServiceName: "eventbus",
 
 		EBHTTPAddress:     "0.0.0.0:8091",
@@ -92,10 +94,10 @@ func NewOptions() *EB_Options {
 		RabbitmqDurable:      true,
 		RabbitmqAutoDelete:   true,
 
-		NSQEnable:      true,
-		NSQCluster:     false,
-		NSQMaxInFlight: 1000,
-		NSQTCPAddress:   "127.0.0.1:4150",
+		NSQEnable:              true,
+		NSQCluster:             false,
+		NSQMaxInFlight:         1000,
+		NSQTCPAddress:          "127.0.0.1:4150",
 		NSQLookupdTCPAddresses: make([]string, 0),
 	}
 }

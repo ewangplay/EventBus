@@ -6,7 +6,8 @@ import (
 	"github.com/ewangplay/eventbus/utils"
 )
 
-func NewFlagSet(opts *EB_Options) *flag.FlagSet {
+// NewFlagSet new eventbus service's flagset
+func NewFlagSet(opts *EBOptions) *flag.FlagSet {
 	flagSet := flag.NewFlagSet("eventbus", flag.ExitOnError)
 
 	// basic options
@@ -62,4 +63,3 @@ func NewFlagSet(opts *EB_Options) *flag.FlagSet {
 
 	return flagSet
 }
-

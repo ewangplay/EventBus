@@ -1,5 +1,6 @@
 package i
 
-type IStater interface {
-	PutState(IEvent)
+// Stater interface define
+type Stater interface {
+	PutState(Event)
 }

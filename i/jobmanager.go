@@ -1,7 +1,8 @@
 package i
 
-type IJobManager interface {
-	Set(IEvent) error
-	Fail(IEvent) error
+// JobManager interface define
+type JobManager interface {
+	Set(Event) error
+	Fail(Event) error
 	Get(string) ([]byte, error)
 }

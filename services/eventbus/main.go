@@ -17,7 +17,7 @@ import (
 
 var (
 	logger     *log.Logger
-	idcounter  *adapter.IDCounter
+	idcounter  *adapter.Counter
 	messager   *adapter.Messager
 	jobmgr     *adapter.JobManager
 	dispatcher *driver.Dispatcher
@@ -63,9 +63,9 @@ func main() {
 	opts.Logger = logger
 
 	//New id counter instance
-	idcounter, err = adapter.NewIdCounter(opts, logger)
+	idcounter, err = adapter.NewCounter(opts, logger)
 	if err != nil {
-		logger.Error("Create IDCounter Error: %v", err)
+		logger.Error("Create Counter Error: %v", err)
 		goto END
 	}
 

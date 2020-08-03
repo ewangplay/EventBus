@@ -1,6 +1,7 @@
 package i
 
-type ILogger interface {
+// Logger interface define
+type Logger interface {
 	Fatal(format string, args ...interface{}) error
 	Error(format string, args ...interface{}) error
 	Warn(format string, args ...interface{}) error

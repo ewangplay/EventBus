@@ -14,24 +14,26 @@ import (
 	"github.com/ewangplay/eventbus/i"
 )
 
+// JobManager struct define, implement JobManager interface
 type JobManager struct {
-	i.ILogger
-	i.IProducer
+	i.Logger
+	i.Producer
 	mutexEvent     sync.RWMutex
 	mutexFailEvent sync.RWMutex
-	opts           *config.EB_Options
-	redisCtx       *redis.RedisContext
-	redisClient    *redis.RedisClient
+	opts           *config.EBOptions
+	redisCtx       *redis.Context
+	redisClient    *redis.Client
 	quit           chan int
 }
 
-func NewJobManager(opts *config.EB_Options, logger i.ILogger, producer i.IProducer) (*JobManager, error) {
-	this := &JobManager{}
-	this.opts = opts
-	this.ILogger = logger
-	this.IProducer = producer
+// NewJobManager ...
+func NewJobManager(opts *config.EBOptions, logger i.Logger, producer i.Producer) (*JobManager, error) {
+	jm := &JobManager{}
+	jm.opts = opts
+	jm.Logger = logger
+	jm.Producer = producer
 
-	redisCtx, err := redis.GetRedisContext(opts, logger)
+	redisCtx, err := redis.GetContext(opts, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -41,208 +43,213 @@ func NewJobManager(opts *config.EB_Options, logger i.ILogger, producer i.IProduc
 		return nil, err
 	}
 
-	this.redisCtx = redisCtx
-	this.redisClient = redisClient
+	jm.redisCtx = redisCtx
+	jm.redisClient = redisClient
 
-	this.quit = make(chan int)
-	go this.work(this.quit)
+	jm.quit = make(chan int)
+	go jm.work(jm.quit)
 
-	return this, nil
+	return jm, nil
 }
 
-func (this *JobManager) Close() error {
-	this.Info("Job manager will close")
-	close(this.quit)
-	return this.redisClient.Close()
+// Close ...
+func (jm *JobManager) Close() error {
+	jm.Info("Job manager will close")
+	close(jm.quit)
+	return jm.redisClient.Close()
 }
 
+// Define redis key name
 const (
-	EVENT_KEY      = "EVENTBUS:EVENT"
-	EVENT_FAIL_KEY = "EVENTBUS:EVENT:FAIL"
-	MUTEX_KEY      = "EVENTBUS:MUTEX"
+	EventKey     = "EVENTBUS:EVENT"
+	EventFailKey = "EVENTBUS:EVENT:FAIL"
+	MutexKey     = "EVENTBUS:MUTEX"
 )
 
-func (this *JobManager) Set(job i.IEvent) error {
-	this.mutexEvent.Lock()
-	defer this.mutexEvent.Unlock()
+// Set event to job manager
+func (jm *JobManager) Set(job i.Event) error {
+	jm.mutexEvent.Lock()
+	defer jm.mutexEvent.Unlock()
 
-	err := this.redisClient.HSet(EVENT_KEY, job.GetId(), job.GetData())
+	err := jm.redisClient.HSet(EventKey, job.GetID(), job.GetData())
 	if err != nil {
-		this.Error("Set event[%s] into status table error: %v", job.GetData(), err)
+		jm.Error("Set event[%s] into status table error: %v", job.GetData(), err)
 		return err
 	}
 	return nil
 }
 
-//Add this job into FAIL table
-func (this *JobManager) Fail(job i.IEvent) error {
+// Fail add jm job into FAIL table
+func (jm *JobManager) Fail(job i.Event) error {
 	var field string
 
-	event_id := job.GetId()
-	retry_policy := job.GetRetryPolicy()
-	retry_count := job.GetRetryCount()
-	retry_interval := job.GetRetryInterval()
-	retry_timeout := job.GetRetryTimeout()
-	create_time := job.GetCreateTime()
-	update_time := job.GetUpdateTime()
-	deadline := create_time + retry_timeout
+	eventID := job.GetID()
+	retryPolicy := job.GetRetryPolicy()
+	retryCount := job.GetRetryCount()
+	retryInterval := job.GetRetryInterval()
+	retryTimeout := job.GetRetryTimeout()
+	createTime := job.GetCreateTime()
+	updateTime := job.GetUpdateTime()
+	deadline := createTime + retryTimeout
 
-	if retry_policy == c.ERP_COUNT {
+	if retryPolicy == c.CountRetryPolicy {
 		field = fmt.Sprintf("%s:%d:%d:%d:%d",
-			event_id,
-			retry_policy,
-			retry_count,
-			update_time,
-			retry_interval)
-	} else if retry_policy == c.ERP_TIMEOUT {
+			eventID,
+			retryPolicy,
+			retryCount,
+			updateTime,
+			retryInterval)
+	} else if retryPolicy == c.ExpiredRetryPolicy {
 		field = fmt.Sprintf("%s:%d:%d:%d:%d",
-			event_id,
-			retry_policy,
+			eventID,
+			retryPolicy,
 			deadline,
-			update_time,
-			retry_interval)
+			updateTime,
+			retryInterval)
 	} else {
-		return fmt.Errorf("invalid retry policy: %d", retry_policy)
+		return fmt.Errorf("invalid retry policy: %d", retryPolicy)
 	}
 
-	this.Debug("Add event[%s] into FAIL table...", job.GetId())
+	jm.Debug("Add event[%s] into FAIL table...", job.GetID())
 
-	this.mutexFailEvent.Lock()
-	err := this.redisClient.HSet(EVENT_FAIL_KEY, field, job.GetData())
+	jm.mutexFailEvent.Lock()
+	err := jm.redisClient.HSet(EventFailKey, field, job.GetData())
 	if err != nil {
-		this.Error("Add event[%s] into FAIL table error: %v", job.GetId(), err)
-		this.mutexFailEvent.Unlock()
+		jm.Error("Add event[%s] into FAIL table error: %v", job.GetID(), err)
+		jm.mutexFailEvent.Unlock()
 		return err
 	}
-	this.mutexFailEvent.Unlock()
+	jm.mutexFailEvent.Unlock()
 
 	return nil
 }
 
-func (this *JobManager) Get(event_id string) ([]byte, error) {
-	this.mutexEvent.RLock()
-	defer this.mutexEvent.RUnlock()
-	return this.redisClient.HGet(EVENT_KEY, event_id)
+// Get event info from job manager
+func (jm *JobManager) Get(eventID string) ([]byte, error) {
+	jm.mutexEvent.RLock()
+	defer jm.mutexEvent.RUnlock()
+	return jm.redisClient.HGet(EventKey, eventID)
 }
 
-func (this *JobManager) work(quit chan int) {
+func (jm *JobManager) work(quit chan int) {
 	ticker := time.NewTicker(time.Second * 5)
 	for {
 		select {
 		case <-quit:
-			this.Debug("quit job manager bg worker")
+			jm.Debug("quit job manager bg worker")
 			return
 		case <-ticker.C:
-			this.Debug("Start to clear up job...")
-			ok, err := this.getMutexFlag()
+			jm.Debug("Start to clear up job...")
+			ok, err := jm.getMutexFlag()
 			if err == nil && ok {
-				this.ProcessFailedJobs()
-				this.resetMutexFlag()
+				jm.ProcessFailedJobs()
+				jm.resetMutexFlag()
 			}
 		}
 	}
 }
 
-func (this *JobManager) ProcessFailedJobs() error {
-	this.mutexFailEvent.RLock()
-	failed_jobs, err := this.redisClient.HGetAll(EVENT_FAIL_KEY)
+// ProcessFailedJobs ...
+func (jm *JobManager) ProcessFailedJobs() error {
+	jm.mutexFailEvent.RLock()
+	failedJobs, err := jm.redisClient.HGetAll(EventFailKey)
 	if err != nil {
-		this.Error("Get failed events error: %v", err)
-		this.mutexFailEvent.RUnlock()
+		jm.Error("Get failed events error: %v", err)
+		jm.mutexFailEvent.RUnlock()
 		return err
 	}
-	this.mutexFailEvent.RUnlock()
+	jm.mutexFailEvent.RUnlock()
 
-	var event c.EB_Event
+	var event c.EBEvent
 	var valid, trigger bool
 
-	for field, data := range failed_jobs {
+	for field, data := range failedJobs {
 
 		//Parse event from data
 		err = json.Unmarshal([]byte(data), &event)
 		if err != nil {
-			this.Error("Unmarshal data[%s] error：%v", data, err)
+			jm.Error("Unmarshal data[%s] error：%v", data, err)
 			return err
 		}
 
 		//Check the validity of failed event
-		valid, trigger = this.checkValidity(field)
+		valid, trigger = jm.checkValidity(field)
 		if valid {
 			if !trigger {
 				continue
 			}
 
-			this.Debug("Reschedule the failed event[%s]...", field)
+			jm.Debug("Reschedule the failed event[%s]...", field)
 
-			//Re-register this job
-			event.Status = c.ES_INIT
+			//Re-register jm job
+			event.Status = c.EventStatusInit
 			event.UpdateTime = time.Now().Format("2006-01-02 15:04:05")
-			err = this.Set(&event)
+			err = jm.Set(&event)
 			if err != nil {
-				this.Error("Re-init event[%s] error：%v", field, err)
+				jm.Error("Re-init event[%s] error：%v", field, err)
 				return err
 			}
 
-			//Publish this event to MQ
+			//Publish jm event to MQ
 			//topic := fmt.Sprintf("%s.%s", event.GetType(), event.GetSubject())
-			err = this.Publish(&c.EB_Message{Subject: event.GetType(), Data: event.GetData()})
+			err = jm.Publish(&c.EBMessage{Subject: event.GetType(), Data: event.GetData()})
 			if err != nil {
-				this.Error("Publish event[%s] error：%v", field, err)
+				jm.Error("Publish event[%s] error：%v", field, err)
 				return err
 			}
 
 		} else {
-			this.Debug("Drop the failed event[%s]...", field)
+			jm.Debug("Drop the failed event[%s]...", field)
 
-			//drop this job
-			event.Status = c.ES_DROP
+			//drop jm job
+			event.Status = c.EventStatusDrop
 			event.UpdateTime = time.Now().Format("2006-01-02 15:04:05")
-			err = this.Set(&event)
+			err = jm.Set(&event)
 			if err != nil {
-				this.Error("Drop event[%s] error：%v", field, err)
+				jm.Error("Drop event[%s] error：%v", field, err)
 				return err
 			}
 		}
 
 		//Remove from FAIL table
-		this.mutexFailEvent.Lock()
-		err = this.redisClient.HDel(EVENT_FAIL_KEY, field)
+		jm.mutexFailEvent.Lock()
+		err = jm.redisClient.HDel(EventFailKey, field)
 		if err != nil {
-			this.Error("Delete event[%s] from FAIL table error: %v", field, err)
-			this.mutexFailEvent.Unlock()
+			jm.Error("Delete event[%s] from FAIL table error: %v", field, err)
+			jm.mutexFailEvent.Unlock()
 			return err
 		}
-		this.mutexFailEvent.Unlock()
+		jm.mutexFailEvent.Unlock()
 	}
 	return nil
 }
 
-func (this *JobManager) getMutexFlag() (bool, error) {
-	exist, err := this.redisClient.Exists(MUTEX_KEY)
+func (jm *JobManager) getMutexFlag() (bool, error) {
+	exist, err := jm.redisClient.Exists(MutexKey)
 	if err != nil {
-		this.Error("Check clearup flag[%s] error: %v", MUTEX_KEY, err)
+		jm.Error("Check clearup flag[%s] error: %v", MutexKey, err)
 		return false, err
 	}
 
 	if !exist {
-		err = this.redisClient.Set(MUTEX_KEY, "1")
+		err = jm.redisClient.Set(MutexKey, "1")
 		if err != nil {
-			this.Error("Set clearup flag[%s] error: %v", MUTEX_KEY, err)
+			jm.Error("Set clearup flag[%s] error: %v", MutexKey, err)
 			return false, err
 		}
 		return true, nil
 	}
 
-	flag, err := this.redisClient.Get(MUTEX_KEY)
+	flag, err := jm.redisClient.Get(MutexKey)
 	if err != nil {
-		this.Error("Get clearup flag[%s] error: %v", MUTEX_KEY, err)
+		jm.Error("Get clearup flag[%s] error: %v", MutexKey, err)
 		return false, err
 	}
 
 	if flag == "0" {
-		err = this.redisClient.Set(MUTEX_KEY, "1")
+		err = jm.redisClient.Set(MutexKey, "1")
 		if err != nil {
-			this.Error("Set clearup flag[%s] error: %v", MUTEX_KEY, err)
+			jm.Error("Set clearup flag[%s] error: %v", MutexKey, err)
 			return false, err
 		}
 		return true, nil
@@ -251,17 +258,17 @@ func (this *JobManager) getMutexFlag() (bool, error) {
 	return false, nil
 }
 
-func (this *JobManager) resetMutexFlag() error {
-	err := this.redisClient.Set(MUTEX_KEY, "0")
+func (jm *JobManager) resetMutexFlag() error {
+	err := jm.redisClient.Set(MutexKey, "0")
 	if err != nil {
-		this.Error("Set clearup flag[%s] error: %v", MUTEX_KEY, err)
+		jm.Error("Set clearup flag[%s] error: %v", MutexKey, err)
 		return err
 	}
 	return nil
 
 }
 
-func (this *JobManager) checkValidity(field string) (valid bool, trigger bool) {
+func (jm *JobManager) checkValidity(field string) (valid bool, trigger bool) {
 	var err error
 
 	elems := strings.Split(field, ":")
@@ -272,56 +279,55 @@ func (this *JobManager) checkValidity(field string) (valid bool, trigger bool) {
 		return false, false
 	}
 
-	//event_id := elems[0]
+	//eventID := elems[0]
 
-	var retry_policy, retry_count, retry_interval, update_time, deadline uint64
+	var retryPolicy, retryCount, retryInterval, updateTime, deadline uint64
 
-	retry_policy, err = strconv.ParseUint(elems[1], 10, 64)
+	retryPolicy, err = strconv.ParseUint(elems[1], 10, 64)
 	if err != nil {
 		return false, false
 	}
 
-	if int(retry_policy) == c.ERP_COUNT {
-		retry_count, err = strconv.ParseUint(elems[2], 10, 64)
+	if int(retryPolicy) == c.CountRetryPolicy {
+		retryCount, err = strconv.ParseUint(elems[2], 10, 64)
 		if err != nil {
 			return false, false
 		}
-		if retry_count == 0 {
+		if retryCount == 0 {
 			return false, false
 		}
 
-		update_time, err = strconv.ParseUint(elems[3], 10, 64)
+		updateTime, err = strconv.ParseUint(elems[3], 10, 64)
 		if err != nil {
 			return false, false
 		}
-		retry_interval, err = strconv.ParseUint(elems[4], 10, 64)
+		retryInterval, err = strconv.ParseUint(elems[4], 10, 64)
 		if err != nil {
 			return false, false
 		}
 
 		now := uint64(time.Now().Unix())
 
-		if now-update_time >= retry_interval {
+		if now-updateTime >= retryInterval {
 			return true, true
-		} else {
-			return true, false
 		}
+		return true, false
 
-	} else if int(retry_policy) == c.ERP_TIMEOUT {
+	} else if int(retryPolicy) == c.ExpiredRetryPolicy {
 		deadline, err = strconv.ParseUint(elems[2], 10, 64)
 		if err != nil {
 			return false, false
 		}
-		update_time, err = strconv.ParseUint(elems[3], 10, 64)
+		updateTime, err = strconv.ParseUint(elems[3], 10, 64)
 		if err != nil {
 			return false, false
 		}
-		retry_interval, err = strconv.ParseUint(elems[4], 10, 64)
+		retryInterval, err = strconv.ParseUint(elems[4], 10, 64)
 		if err != nil {
 			return false, false
 		}
 
-		if update_time >= deadline {
+		if updateTime >= deadline {
 			return false, false
 		}
 
@@ -329,11 +335,10 @@ func (this *JobManager) checkValidity(field string) (valid bool, trigger bool) {
 		if now >= deadline {
 			return false, false
 		}
-		if now-update_time >= retry_interval {
+		if now-updateTime >= retryInterval {
 			return true, true
-		} else {
-			return true, false
 		}
+		return true, false
 
 	}
 

@@ -12,21 +12,24 @@ import (
 	"time"
 )
 
+// Sha256 generate SHA-256 hash for input data
 func Sha256(data []byte) string {
-	md5_hash := md5.New()
-	md5_hash.Write(data)
-	cs := md5_hash.Sum(nil)
+	md5Hash := md5.New()
+	md5Hash.Write(data)
+	cs := md5Hash.Sum(nil)
 	return hex.EncodeToString(cs)
 }
 
+// Md5 generate MD5 hash for input data
 func Md5(data []byte) string {
-	sha256_hash := sha256.New()
-	sha256_hash.Write(data)
-	cs := sha256_hash.Sum(nil)
+	sha256Hash := sha256.New()
+	sha256Hash.Write(data)
+	cs := sha256Hash.Sum(nil)
 	return hex.EncodeToString(cs)
 }
 
-func HttpPost(url string, data []byte) ([]byte, error) {
+// HTTPPost post body to specified url
+func HTTPPost(url string, data []byte) ([]byte, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{

@@ -6,16 +6,16 @@ eventbus:
     url_pattern: /(v\d+)/(\w+)/?(\w+)?/?(\w+)?
     
     ## retry policy for failed event: 1 - count policy; 2 - timeout policy
-    retry_policy: 1
+    retryPolicy: 1
 
     ## max retry count for failed event
-    max_retry_count: 10
+    max_retryCount: 10
 
     ## duration time of retry interval for failed event
-    retry_interval: "5s"
+    retryInterval: "5s"
 
     ## max retry timeout for failed event
-    max_retry_timeout: "2h"
+    max_retryTimeout: "2h"
 
 driver:
     - notifier
@@ -29,10 +29,10 @@ log:
     path: "/opt/eventbus/log"
 
     ## max size per log file before rolling (megabytes)
-    max_size: 100
+    maxSize: 100
 
     ## rotate log file daily
-    rotate_daily: false
+    rotateDaily: false
 
     ## max age per log file (days)
     max_age: 30

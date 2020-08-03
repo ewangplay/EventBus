@@ -9,137 +9,143 @@ import (
 	"github.com/ewangplay/eventbus/i"
 )
 
+// Messager struct define, implement Messager interface
 type Messager struct {
-	i.ILogger
-	context   i.IContext
-	producer  i.IProducer
-	opts      *config.EB_Options
-	consumers map[string]i.IConsumer
+	i.Logger
+	context   i.Context
+	producer  i.Producer
+	opts      *config.EBOptions
+	consumers map[string]i.Consumer
 }
 
-func NewMessager(opts *config.EB_Options, logger i.ILogger) (*Messager, error) {
-	this := &Messager{}
+// NewMessager ...
+func NewMessager(opts *config.EBOptions, logger i.Logger) (*Messager, error) {
+	m := &Messager{}
 
-	this.opts = opts
-	this.ILogger = logger
+	m.opts = opts
+	m.Logger = logger
 
 	var err error
-	var context i.IContext
-	var producer i.IProducer
-	if this.opts.NSQEnable {
-		context, err = nsq.GetNSQContext(opts, logger)
+	var context i.Context
+	var producer i.Producer
+	if m.opts.NSQEnable {
+		context, err = nsq.GetContext(opts, logger)
 		if err != nil {
-			this.Error("Get nsq context instance error: %v", err)
+			m.Error("Get nsq context instance error: %v", err)
 			return nil, err
 		}
 
 		producer, err = context.CreateProducer()
 		if err != nil {
-			this.Error("Create nsq producer error: %v", err)
+			m.Error("Create nsq producer error: %v", err)
 			return nil, err
 		}
 
 	} else {
-		context, err = rabbitmq.GetRabbitMQContext(opts, logger)
+		context, err = rabbitmq.GetContext(opts, logger)
 		if err != nil {
-			this.Error("Get rabbitmq context instance error: %v", err)
+			m.Error("Get rabbitmq context instance error: %v", err)
 			return nil, err
 		}
 
 		producer, err = context.CreateProducer()
 		if err != nil {
-			this.Error("Create rabbitmq producer error: %v", err)
+			m.Error("Create rabbitmq producer error: %v", err)
 			return nil, err
 		}
 
 	}
 
-	this.context = context
-	this.producer = producer
-	this.consumers = make(map[string]i.IConsumer, 1)
+	m.context = context
+	m.producer = producer
+	m.consumers = make(map[string]i.Consumer, 1)
 
-	return this, nil
+	return m, nil
 }
 
-func (this *Messager) Close() error {
-	this.Info("Messager will close")
-	this.producer.Close()
-	for _, consumer := range this.consumers {
+// Close ...
+func (m *Messager) Close() error {
+	m.Info("Messager will close")
+	m.producer.Close()
+	for _, consumer := range m.consumers {
 		consumer.Close()
 	}
 	return nil
 }
 
-func (this *Messager) Publish(msg i.IMessage) error {
-	if this.producer == nil {
+// Publish message to messager
+func (m *Messager) Publish(msg i.Message) error {
+	if m.producer == nil {
 		return fmt.Errorf("producer not valid")
 	}
-	return this.producer.Publish(msg)
+	return m.producer.Publish(msg)
 }
 
-func (this *Messager) Subscribe(subject string) (<-chan i.IMessage, error) {
+// Subscribe messages from messager based on subject
+func (m *Messager) Subscribe(subject string) (<-chan i.Message, error) {
 
 	//If consumer has already existed, get message chan directly
-	old_consumer, ok := this.consumers[subject]
+	oldConsumer, ok := m.consumers[subject]
 	if ok {
-		return old_consumer.GetMessage(), nil
+		return oldConsumer.GetMessage(), nil
 	}
 
 	var err error
-	var consumer i.IConsumer
-	if this.opts.NSQEnable {
+	var consumer i.Consumer
+	if m.opts.NSQEnable {
 
-		if this.context == nil {
-			this.context, err = nsq.GetNSQContext(this.opts, this.ILogger)
+		if m.context == nil {
+			m.context, err = nsq.GetContext(m.opts, m.Logger)
 			if err != nil {
-				this.Error("Get nsq context instance error: %v", err)
+				m.Error("Get nsq context instance error: %v", err)
 				return nil, err
 			}
 		}
 
-		consumer, err = this.context.CreateConsumer(subject)
+		consumer, err = m.context.CreateConsumer(subject)
 		if err != nil {
-			this.Error("Create nsq consumer error: %v", err)
+			m.Error("Create nsq consumer error: %v", err)
 			return nil, err
 		}
 
 	} else {
 
-		if this.context == nil {
-			this.context, err = rabbitmq.GetRabbitMQContext(this.opts, this.ILogger)
+		if m.context == nil {
+			m.context, err = rabbitmq.GetContext(m.opts, m.Logger)
 			if err != nil {
-				this.Error("Get rabbitmq context instance error: %v", err)
+				m.Error("Get rabbitmq context instance error: %v", err)
 				return nil, err
 			}
 		}
 
-		consumer, err = this.context.CreateConsumer(subject)
+		consumer, err = m.context.CreateConsumer(subject)
 		if err != nil {
-			this.Error("Create rabbitmq consumer error: %v", err)
+			m.Error("Create rabbitmq consumer error: %v", err)
 			return nil, err
 		}
 
 	}
 
-	this.consumers[subject] = consumer
+	m.consumers[subject] = consumer
 
 	return consumer.GetMessage(), nil
 }
 
-func (this *Messager) Unsubscribe(subject string) error {
-	consumer, ok := this.consumers[subject]
+// Unsubscribe ...
+func (m *Messager) Unsubscribe(subject string) error {
+	consumer, ok := m.consumers[subject]
 	if !ok {
-		this.Info("Unsubscribe a consumer which does not exist: %v", subject)
+		m.Info("Unsubscribe a consumer which does not exist: %v", subject)
 		return nil
 	}
 
 	err := consumer.Close()
 	if err != nil {
-		this.Error("Close consumer[%v] error: %v", subject, err)
+		m.Error("Close consumer[%v] error: %v", subject, err)
 		return err
 	}
 
-	delete(this.consumers, subject)
+	delete(m.consumers, subject)
 
 	return nil
 }

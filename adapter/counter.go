@@ -9,16 +9,18 @@ import (
 	"github.com/ewangplay/eventbus/i"
 )
 
-type IDCounter struct {
-	i.ILogger
-	redisCtx    *redis.RedisContext
-	redisClient *redis.RedisClient
+// Counter struct define, implment Counter interface
+type Counter struct {
+	i.Logger
+	redisCtx    *redis.Context
+	redisClient *redis.Client
 }
 
-func NewIdCounter(opts *config.EB_Options, logger i.ILogger) (*IDCounter, error) {
-	idcounter := &IDCounter{logger, nil, nil}
+// NewCounter ...
+func NewCounter(opts *config.EBOptions, logger i.Logger) (*Counter, error) {
+	idcounter := &Counter{logger, nil, nil}
 
-	redisCtx, err := redis.GetRedisContext(opts, logger)
+	redisCtx, err := redis.GetContext(opts, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -34,18 +36,20 @@ func NewIdCounter(opts *config.EB_Options, logger i.ILogger) (*IDCounter, error)
 	return idcounter, nil
 }
 
-func (this *IDCounter) Close() error {
-	this.Info("Id counter will close")
-	return this.redisClient.Close()
+// Close ...
+func (c *Counter) Close() error {
+	c.Info("Id counter will close")
+	return c.redisClient.Close()
 }
 
-func (this *IDCounter) NewEventId() (string, error) {
-	if this.redisClient == nil {
+// NewEventID ...
+func (c *Counter) NewEventID() (string, error) {
+	if c.redisClient == nil {
 		return "", fmt.Errorf("redis client instance invalid")
 	}
 
 	key := fmt.Sprintf("EVENTBUS:EVENT:ID")
-	id, err := this.redisClient.Incr(key)
+	id, err := c.redisClient.Incr(key)
 	if err != nil {
 		return "", err
 	}

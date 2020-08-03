@@ -1,14 +1,13 @@
 package rest
 
 import (
-	_ "net/http"
-
 	"github.com/ewangplay/eventbus/config"
 	"github.com/ewangplay/eventbus/i"
 	"github.com/fvbock/endless"
 )
 
-func StartServer(opts *config.EB_Options, logger i.ILogger, idcounter i.IIDCounter, messager i.IProducer, jobmgr i.IJobManager) (err error) {
+// StartServer ...
+func StartServer(opts *config.EBOptions, logger i.Logger, idcounter i.Counter, messager i.Producer, jobmgr i.JobManager) (err error) {
 	// Start Pprof debug server...
 	if opts.PProfEnable {
 		go func() {
@@ -21,10 +20,10 @@ func StartServer(opts *config.EB_Options, logger i.ILogger, idcounter i.IIDCount
 	}
 
 	// Build REST router
-	base_handler := NewBaseHandler(opts, logger, idcounter, messager, jobmgr)
+	baseHandler := NewBaseHandler(opts, logger, idcounter, messager, jobmgr)
 	routes := map[string]i.Handler{
-		"v1/event": &EventHandler{BaseHandler: base_handler},
-		"v1/test":  &TestHandler{BaseHandler: base_handler},
+		"v1/event": &EventHandler{BaseHandler: baseHandler},
+		"v1/test":  &TestHandler{BaseHandler: baseHandler},
 	}
 	router := NewRouter(opts, routes)
 

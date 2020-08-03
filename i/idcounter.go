@@ -1,5 +1,6 @@
 package i
 
-type IIDCounter interface {
-	NewEventId() (string, error)
+// Counter interface define
+type Counter interface {
+	NewEventID() (string, error)
 }

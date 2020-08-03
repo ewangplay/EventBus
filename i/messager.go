@@ -1,28 +1,33 @@
 package i
 
-type IMessage interface {
+// Message interface define
+type Message interface {
 	GetSubject() string
 	GetData() []byte
 }
 
-type IContext interface {
-	CreateProducer() (IProducer, error)
-	CreateConsumer(subject string) (IConsumer, error)
+// Context interface define
+type Context interface {
+	CreateProducer() (Producer, error)
+	CreateConsumer(subject string) (Consumer, error)
 }
 
-type IProducer interface {
-	Publish(msg IMessage) error
+// Producer interface define
+type Producer interface {
+	Publish(msg Message) error
 	Close() error
 }
 
-type IConsumer interface {
-	GetMessage() <-chan IMessage
+// Consumer interface define
+type Consumer interface {
+	GetMessage() <-chan Message
 	Close() error
 }
 
-type IMessager interface {
-	Publish(msg IMessage) error
-	Subscribe(subject string) (<-chan IMessage, error)
+// Messager interface define
+type Messager interface {
+	Publish(msg Message) error
+	Subscribe(subject string) (<-chan Message, error)
 	Unsubscribe(subject string) error
 	Close() error
 }

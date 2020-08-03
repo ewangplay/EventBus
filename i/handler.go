@@ -4,6 +4,7 @@ import (
 	"net/http"
 )
 
+// ProcessFunc prototype define
 type ProcessFunc func(
 	method string,
 	resources []string,
@@ -11,6 +12,7 @@ type ProcessFunc func(
 	body []byte,
 	result map[string]interface{}) error
 
+// Handler interface define
 type Handler interface {
 	Process(
 		r *http.Request,

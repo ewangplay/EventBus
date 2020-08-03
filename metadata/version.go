@@ -23,6 +23,7 @@ const hotfix = 0
 // Version ...
 var Version = fmt.Sprintf("%d.%d.%d", release, fixpack, hotfix)
 
+// GetVersionInfo returns service version info
 func GetVersionInfo(progName string) string {
 	return fmt.Sprintf("%s:\n Version: %s\n BuildNumber: %s\n Go version: %s\n OS/Arch: %s",
 		progName, Version, BuildNumber, runtime.Version(),

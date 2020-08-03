@@ -13,26 +13,29 @@ import (
 	"github.com/ewangplay/eventbus/i"
 )
 
+// Router struct define
 type Router struct {
-	opts   *config.EB_Options
+	opts   *config.EBOptions
 	routes map[string]i.Handler
 }
 
-func NewRouter(opts *config.EB_Options, routes map[string]i.Handler) *Router {
+// NewRouter ...
+func NewRouter(opts *config.EBOptions, routes map[string]i.Handler) *Router {
 	return &Router{opts, routes}
 }
 
-func (this *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// ServerHTTP ...
+func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//路由分发设置，用来判断url是否合法，通过配置文件的正则表达式配置
 
 	header := w.Header()
 	header.Add("Content-Type", "application/json")
 	header.Add("charset", "UTF-8")
 
-	resources, err := this.parseURL(r.RequestURI)
+	resources, err := router.parseURL(r.RequestURI)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, this.makeErrorResult(-1, err.Error()))
+		io.WriteString(w, router.makeErrorResult(-1, err.Error()))
 		return
 	}
 
@@ -47,15 +50,15 @@ func (this *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		res = append(res, resource)
 	}
 
-	var this_handler i.Handler
+	var handler i.Handler
 	var result string
 
 	for i := len(res) - 1; i >= 0; i-- {
 		resource := res[i]
 
-		this_handler, err = this.getHandler(resource)
+		handler, err = router.getHandler(resource)
 		if err == nil {
-			result, err = this_handler.Process(r, resources, this_handler.ProcessFunc)
+			result, err = handler.Process(r, resources, handler.ProcessFunc)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				io.WriteString(w, result)
@@ -69,24 +72,23 @@ func (this *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, this.makeErrorResult(-1, err.Error()))
+		io.WriteString(w, router.makeErrorResult(-1, err.Error()))
 	}
 
 	return
 }
 
-func (this *Router) getHandler(resource string) (i.Handler, error) {
-	handler, found := this.routes[resource]
+func (router *Router) getHandler(resource string) (i.Handler, error) {
+	handler, found := router.routes[resource]
 	if found && handler != nil {
 		return handler, nil
-	} else {
-		return nil, errors.New("handler not found.")
 	}
+	return nil, errors.New("handler not found")
 }
 
-func (this *Router) parseURL(url string) (resources []string, err error) {
+func (router *Router) parseURL(url string) (resources []string, err error) {
 	//url pattern example: "/(v\\d+)/(\\w+)/?(\\w+)?"
-	urlPattern := this.opts.EBUrlPattern
+	urlPattern := router.opts.EBUrlPattern
 	urlRegexp, err := regexp.Compile(urlPattern)
 	if err != nil {
 		return
@@ -105,15 +107,15 @@ func (this *Router) parseURL(url string) (resources []string, err error) {
 	return
 }
 
-func (this *Router) makeErrorResult(errcode int, errmsg string) string {
+func (router *Router) makeErrorResult(errcode int, errmsg string) string {
 
 	data := map[string]interface{}{
-		c.ERROR_CODE: errcode,
-		c.ERROR_MSG:  errmsg,
+		c.ErrorCode: errcode,
+		c.ErrorMsg:  errmsg,
 	}
 	result, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Sprintf("{\"%s\":%d,\"%s\":\"%s\"}", c.ERROR_CODE, errcode, c.ERROR_MSG, errmsg)
+		return fmt.Sprintf("{\"%s\":%d,\"%s\":\"%s\"}", c.ErrorCode, errcode, c.ErrorMsg, errmsg)
 	}
 	return string(result)
 }

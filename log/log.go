@@ -8,19 +8,21 @@ import (
 	"github.com/ewangplay/eventbus/config"
 )
 
+// Logger struct define, implement Logger interface
 type Logger struct {
-	service_name  string
-	cfgLevel      config.LogLevel
-	logger        *logger.Logger
-	rotate_writer *RotateWriter
+	serviceName  string
+	cfgLevel     config.LogLevel
+	logger       *logger.Logger
+	rotateWriter *RotateWriter
 }
 
-func New(opts *config.EB_Options) (log *Logger, err error) {
+// New Logger instance
+func New(opts *config.EBOptions) (log *Logger, err error) {
 	service := opts.ServiceName
 	filename := fmt.Sprintf("%s.log", service)
-	log_file := filepath.Join(opts.LogPath, filename)
+	logFile := filepath.Join(opts.LogPath, filename)
 
-	rotate_writer, err := NewRotateWriter(log_file,
+	rotateWriter, err := NewRotateWriter(logFile,
 		opts.LogMaxSize,
 		opts.LogRotateDaily)
 	if err != nil {
@@ -28,27 +30,28 @@ func New(opts *config.EB_Options) (log *Logger, err error) {
 	}
 
 	color := 0
-	logger, err := logger.New(service, color, rotate_writer)
+	logger, err := logger.New(service, color, rotateWriter)
 	if err != nil {
 		return nil, err
 	}
 
 	log = &Logger{
-		service_name:  service,
-		cfgLevel:      config.ParseLogLevel(opts.LogLevel),
-		logger:        logger,
-		rotate_writer: rotate_writer,
+		serviceName:  service,
+		cfgLevel:     config.ParseLogLevel(opts.LogLevel),
+		logger:       logger,
+		rotateWriter: rotateWriter,
 	}
 
 	return log, nil
 }
 
-func (this *Logger) Close() (err error) {
-	return this.rotate_writer.Close()
+// Close logger instance
+func (l *Logger) Close() (err error) {
+	return l.rotateWriter.Close()
 }
 
-func (this *Logger) log(level config.LogLevel, format string, args ...interface{}) (err error) {
-	if level < this.cfgLevel {
+func (l *Logger) log(level config.LogLevel, format string, args ...interface{}) (err error) {
+	if level < l.cfgLevel {
 		return nil
 	}
 
@@ -57,33 +60,39 @@ func (this *Logger) log(level config.LogLevel, format string, args ...interface{
 
 	s := fmt.Sprintf("%s: %s", level, msg)
 
-	this.Output(3, s)
+	l.Output(3, s)
 
 	return nil
 }
 
-func (this *Logger) Output(maxdepth int, s string) error {
+// Output ...
+func (l *Logger) Output(maxdepth int, s string) error {
 	maxdepth += 2
-	this.logger.Log("", maxdepth, s)
+	l.logger.Log("", maxdepth, s)
 	return nil
 }
 
-func (this *Logger) Fatal(format string, args ...interface{}) (err error) {
-	return this.log(config.FATAL, format, args...)
+// Fatal ...
+func (l *Logger) Fatal(format string, args ...interface{}) (err error) {
+	return l.log(config.FATAL, format, args...)
 }
 
-func (this *Logger) Error(format string, args ...interface{}) (err error) {
-	return this.log(config.ERROR, format, args...)
+// Error ...
+func (l *Logger) Error(format string, args ...interface{}) (err error) {
+	return l.log(config.ERROR, format, args...)
 }
 
-func (this *Logger) Warn(format string, args ...interface{}) (err error) {
-	return this.log(config.WARN, format, args...)
+// Warn ...
+func (l *Logger) Warn(format string, args ...interface{}) (err error) {
+	return l.log(config.WARN, format, args...)
 }
 
-func (this *Logger) Info(format string, args ...interface{}) (err error) {
-	return this.log(config.INFO, format, args...)
+// Info ...
+func (l *Logger) Info(format string, args ...interface{}) (err error) {
+	return l.log(config.INFO, format, args...)
 }
 
-func (this *Logger) Debug(format string, args ...interface{}) (err error) {
-	return this.log(config.DEBUG, format, args...)
+// Debug ...
+func (l *Logger) Debug(format string, args ...interface{}) (err error) {
+	return l.log(config.DEBUG, format, args...)
 }

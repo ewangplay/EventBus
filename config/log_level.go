@@ -2,8 +2,10 @@ package config
 
 import "strings"
 
+// LogLevel type log level
 type LogLevel int
 
+// Log level enum list
 const (
 	DEBUG = LogLevel(1)
 	INFO  = LogLevel(2)
@@ -28,6 +30,7 @@ func (l LogLevel) String() string {
 	panic("invalid LogLevel")
 }
 
+// ParseLogLevel convert log level from string type to LogLevel type
 func ParseLogLevel(levelstr string) LogLevel {
 	lvl := INFO
 	switch strings.ToLower(levelstr) {

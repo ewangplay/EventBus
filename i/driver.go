@@ -1,6 +1,7 @@
 package i
 
-type IDriver interface {
+// Driver interface define
+type Driver interface {
 	GetType() string
-	Process(messages <-chan IMessage) error
+	Process(messages <-chan Message) error
 }
