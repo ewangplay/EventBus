@@ -94,7 +94,7 @@ func NewOptions() *EBOptions {
 		RabbitmqDurable:      true,
 		RabbitmqAutoDelete:   true,
 
-		NSQEnable:              true,
+		NSQEnable:              false,
 		NSQCluster:             false,
 		NSQMaxInFlight:         1000,
 		NSQTCPAddress:          "127.0.0.1:4150",

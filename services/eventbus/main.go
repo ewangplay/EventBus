@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/ewangplay/eventbus/adapter"
+	msger "github.com/ewangplay/eventbus/adapter/messager"
 	cfg "github.com/ewangplay/eventbus/config"
 	"github.com/ewangplay/eventbus/driver"
 	"github.com/ewangplay/eventbus/log"
@@ -18,7 +19,7 @@ import (
 var (
 	logger     *log.Logger
 	idcounter  *adapter.Counter
-	messager   *adapter.Messager
+	messager   *msger.Messager
 	jobmgr     *adapter.JobManager
 	dispatcher *driver.Dispatcher
 )
@@ -70,7 +71,7 @@ func main() {
 	}
 
 	//New messager instance
-	messager, err = adapter.NewMessager(opts, logger)
+	messager, err = msger.NewMessager(opts, logger)
 	if err != nil {
 		logger.Error("Create Messager Error: %v", err)
 		goto END

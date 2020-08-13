@@ -1,10 +1,11 @@
-package adapter
+package messager
 
 import (
 	"fmt"
 
-	"github.com/ewangplay/eventbus/adapter/nsq"
-	"github.com/ewangplay/eventbus/adapter/rabbitmq"
+	"github.com/ewangplay/eventbus/adapter/messager/nsq"
+	"github.com/ewangplay/eventbus/adapter/messager/rabbitmq"
+	"github.com/ewangplay/eventbus/adapter/messager/solo"
 	"github.com/ewangplay/eventbus/config"
 	"github.com/ewangplay/eventbus/i"
 )
@@ -29,6 +30,8 @@ func NewMessager(opts *config.EBOptions, logger i.Logger) (*Messager, error) {
 	var context i.Context
 	var producer i.Producer
 	if m.opts.NSQEnable {
+		m.Info("Using NSQ messager ...")
+
 		context, err = nsq.GetContext(opts, logger)
 		if err != nil {
 			m.Error("Get nsq context instance error: %v", err)
@@ -41,7 +44,9 @@ func NewMessager(opts *config.EBOptions, logger i.Logger) (*Messager, error) {
 			return nil, err
 		}
 
-	} else {
+	} else if m.opts.RabbitmqEnable {
+		m.Info("Using Rabbitmq messager ...")
+
 		context, err = rabbitmq.GetContext(opts, logger)
 		if err != nil {
 			m.Error("Get rabbitmq context instance error: %v", err)
@@ -51,6 +56,21 @@ func NewMessager(opts *config.EBOptions, logger i.Logger) (*Messager, error) {
 		producer, err = context.CreateProducer()
 		if err != nil {
 			m.Error("Create rabbitmq producer error: %v", err)
+			return nil, err
+		}
+
+	} else {
+		m.Info("Using Solo messager ...")
+
+		context, err = solo.GetContext(opts, logger)
+		if err != nil {
+			m.Error("Get solo context instance error: %v", err)
+			return nil, err
+		}
+
+		producer, err = context.CreateProducer()
+		if err != nil {
+			m.Error("Create solo producer error: %v", err)
 			return nil, err
 		}
 
@@ -108,7 +128,7 @@ func (m *Messager) Subscribe(subject string) (<-chan i.Message, error) {
 			return nil, err
 		}
 
-	} else {
+	} else if m.opts.RabbitmqEnable {
 
 		if m.context == nil {
 			m.context, err = rabbitmq.GetContext(m.opts, m.Logger)
@@ -124,6 +144,21 @@ func (m *Messager) Subscribe(subject string) (<-chan i.Message, error) {
 			return nil, err
 		}
 
+	} else {
+
+		if m.context == nil {
+			m.context, err = solo.GetContext(m.opts, m.Logger)
+			if err != nil {
+				m.Error("Get solo context instance error: %v", err)
+				return nil, err
+			}
+		}
+
+		consumer, err = m.context.CreateConsumer(subject)
+		if err != nil {
+			m.Error("Create solo consumer error: %v", err)
+			return nil, err
+		}
 	}
 
 	m.consumers[subject] = consumer
